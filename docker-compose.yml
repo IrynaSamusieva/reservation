@@ -10,11 +10,10 @@ services:
       POSTGRES_PASSWORD: root
     volumes:
       - ./db_backup.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
+
 
   tomcat:
-    build: src/test/java
+    build: .
     container_name: tomcat
     depends_on:
       - postgres

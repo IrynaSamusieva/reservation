@@ -47,7 +47,7 @@ public class ReservationController {
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/reject")
     public ResponseEntity<Void> DeleteReservation(@PathVariable("id") Long id) {
         log.info("ReservationToDelete");
         try{
