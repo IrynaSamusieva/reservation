@@ -1,14 +1,15 @@
-package iryna.samusieva.reservation_system;
+package iryna.samusieva.reservation_system.reservations;
 
 
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/reservation")
@@ -26,12 +27,18 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getResetvationById(id)) ;
     }
     @GetMapping()
-    public ResponseEntity<List<Reservation>> GetAllReservationById() {
-        return ResponseEntity.ok(reservationService.getAllReservations());
+    public ResponseEntity<List<Reservation>> GetAllReservationById(
+            @RequestParam(name ="userId", required = false)Long userId,
+            @RequestParam(name = "roomId", required = false)Long roomId,
+            @RequestParam(name = "pageSize", required = false)Integer pageSize,
+            @RequestParam(name = "pageNumber", required = false)Integer pageNumber
+            ) {
+        var filter = new ReservationSearchFilter(userId, roomId, pageSize, pageNumber);
+        return ResponseEntity.ok(reservationService.searchByFilter(filter));
     }
 
     @PostMapping()
-    public ResponseEntity<Reservation> CreateReservation(@RequestBody Reservation reservationToCreate) {
+    public ResponseEntity<Reservation> CreateReservation(@RequestBody @Valid Reservation reservationToCreate) {
         log.info("ReservationToCreate");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header("test", "123")
@@ -41,7 +48,7 @@ public class ReservationController {
     @PutMapping("/{id}")
     public ResponseEntity<Reservation> UpdateReservation(
             @PathVariable("id") Long id,
-            @RequestBody Reservation reservationToUpdate) {
+            @RequestBody @Valid Reservation reservationToUpdate) {
         log.info("ReservationToUpdate");
         var updated = reservationService.reservationToUpdate(id, reservationToUpdate);
         return ResponseEntity.ok(updated);
@@ -50,12 +57,9 @@ public class ReservationController {
     @DeleteMapping("/{id}/reject")
     public ResponseEntity<Void> DeleteReservation(@PathVariable("id") Long id) {
         log.info("ReservationToDelete");
-        try{
             reservationService.reseravationToDelete(id);
-            return ResponseEntity.ok().build();
-        }catch(NoSuchElementException e){
-            return ResponseEntity.notFound().build();
-        }
+            return ResponseEntity.status(500).build();
+
     }
 
     @PostMapping("/{id}/approve")

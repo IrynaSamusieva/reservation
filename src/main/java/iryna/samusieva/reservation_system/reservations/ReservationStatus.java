@@ -1,4 +1,4 @@
-package iryna.samusieva.reservation_system;
+package iryna.samusieva.reservation_system.reservations;
 
 public enum ReservationStatus {
     PENDING,
