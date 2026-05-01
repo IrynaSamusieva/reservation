@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/reservation")
+@CrossOrigin(origins = "http://localhost:5173")
 public class ReservationController {
     private final Logger log = LoggerFactory.getLogger(ReservationController.class);
     private final ReservationService reservationService;
@@ -23,7 +24,7 @@ public class ReservationController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> GetReservationById(@PathVariable("id") Long id) {
-        log.info("hui");
+        log.info("getId");
         return ResponseEntity.ok(reservationService.getResetvationById(id)) ;
     }
     @GetMapping()

@@ -26,6 +26,8 @@ public class ReservationEntity {
     @Column(name = "status", nullable = false)
     private ReservationStatus status;
 
+    @Enumerated(EnumType.STRING)
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -85,4 +87,5 @@ public class ReservationEntity {
     public void setStatus(ReservationStatus status) {
         this.status = status;
     }
+
 }
