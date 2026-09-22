@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 
@@ -38,5 +39,11 @@ public class GlobalExceptionHandler {
         var error = new ErrorResponseDto("Bad request",
                 e.getMessage(), LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler({AccessDeniedException.class, SecurityException.class})
+    public ResponseEntity<ErrorResponseDto> handleForbidden(Exception e) {
+        var error = new ErrorResponseDto("Forbidden", e.getMessage(), LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 }

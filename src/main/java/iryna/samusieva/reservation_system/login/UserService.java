@@ -1,6 +1,7 @@
 package iryna.samusieva.reservation_system.login;
 
 import iryna.samusieva.reservation_system.reservations.ReservationRole;
+import iryna.samusieva.reservation_system.JwtService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -9,11 +10,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper, BCryptPasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, BCryptPasswordEncoder passwordEncoder,
+                       JwtService jwtService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     public void registerUser(UserRequest registrationDto) {
@@ -31,12 +35,26 @@ public class UserService {
     }
 
     public UserResponse loginUser(UserRequest user) {
-        UserEntity userEntity = userRepository.findByUsername(user.username())
+        UserEntity userEntity = userRepository.findByEmail(user.email())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if(!passwordEncoder.matches(user.password(), userEntity.getPassword())) {
             throw new RuntimeException("Incorrect password");
         }
-        return userMapper.toResponse(userEntity);
+        return new UserResponse(
+                userEntity.getId(),
+                userEntity.getUsername(),
+                userEntity.getEmail(),
+                userEntity.getRole(),
+                jwtService.generateToken(userEntity)
+        );
+    }
+
+    public boolean isAdmin(Long userId) {
+        UserEntity userEntity = userRepository.findById(userId).orElse(null);
+        if(userEntity == null) {
+            return false;
+        }
+        return userEntity.getRole().equals(ReservationRole.ADMIN);
     }
 }

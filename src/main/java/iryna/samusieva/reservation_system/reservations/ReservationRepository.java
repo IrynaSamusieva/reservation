@@ -33,14 +33,15 @@ AND r.roomId = :roomId
                                              @Param("status") ReservationStatus status);
     @Query("""
     select r from ReservationEntity r where 
-    (:roomId IS NULL OR r.roomId =: roomId)
-    AND (:userId IS NULL OR r.userId =: userId)
+    (:roomId IS NULL OR r.roomId = :roomId)
+    AND (:userId IS NULL OR r.userId = :userId)
 """)
     List<ReservationEntity> searchByFilter(
             @Param("userId") Long userId,
             @Param("roomId") Long roomId,
             Pageable pageable
     );
+
 }
 
 

@@ -1,6 +1,7 @@
 package iryna.samusieva.reservation_system.reservations;
 
 import iryna.samusieva.reservation_system.availability.ReservationavailabilityService;
+import iryna.samusieva.reservation_system.AuthenticatedUser;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,18 +26,22 @@ public class ReservationService {
         this.service = service;
     }
 
-    public Reservation reservationToUpdate(Long id, Reservation reservationToUpdate) {
+    public Reservation reservationToUpdate(Long id, Reservation reservationToUpdate, AuthenticatedUser user) {
     var resrvationEntity = repository.findById(id).orElseThrow(() ->
             new NoSuchElementException("Reservation is not found"));
     if(resrvationEntity.getStatus() != ReservationStatus.PENDING){
         throw new NoSuchElementException("Reservation is not pending");
     }
+        if (!user.isAdmin() && !resrvationEntity.getUserId().equals(user.id())) {
+            throw new SecurityException("You cannot update another user's reservation");
+        }
         if(!reservationToUpdate.endDate().isAfter(reservationToUpdate.startDate())){
             throw new IllegalArgumentException("End date must be after start date");
         }
         else{
             var updated = mapper.toReservationEntity(reservationToUpdate);
-            updated.setId(reservationToUpdate.id());
+            updated.setId(id);
+            updated.setUserId(resrvationEntity.getUserId());
             updated.setStatus(ReservationStatus.PENDING);
             var saved = repository.save(updated);
             return mapper.toDomain(saved);
@@ -68,7 +73,7 @@ public class ReservationService {
         return allEntity.stream().map(mapper::toDomain).toList();
     }
 
-    public Reservation createResevation(Reservation reservation) {
+    public Reservation createResevation(Reservation reservation, Long authenticatedUserId) {
         if(reservation.status() != null){
             throw new IllegalArgumentException("You cant input your own status");
         }
@@ -76,6 +81,7 @@ public class ReservationService {
             throw new IllegalArgumentException("End date must be after start date");
         }
            var entityToSave = mapper.toReservationEntity(reservation);
+        entityToSave.setUserId(authenticatedUserId);
         entityToSave.setStatus(ReservationStatus.PENDING);
 
         var savedEntity = repository.save(entityToSave);

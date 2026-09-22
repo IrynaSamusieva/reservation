@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 
 function ReservationGetDetail() {
     const [reservation, setReservation] = useState(null);
     const [error, setError] = useState('');
+    const API_BASE = import.meta.env.VITE_API_BASE;
 
     const fetchReservation = async (id) => {
         try {
 
-            const response = await axios.get(`http://localhost:8080/reservation/${id}`);
+            const response = await axios.get(`${API_BASE}/reservation/${id}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+            });
 
             setReservation(response.data);
             setError('');
