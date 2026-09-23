@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import styles from './Login.module.css';
+const TARGET_PAGE = '/reservation';
 
 function Login({ onLoginSuccess }) {
+    const navigate = useNavigate();
     const [mode, setMode] = useState('signup');
 
     const [formData, setFormData] = useState({
@@ -26,18 +29,35 @@ function Login({ onLoginSuccess }) {
         setMessage('');
 
         try {
-            const endpoint = mode === 'signup' ? '/auth/signup' : '/auth/login';
-            const response = await axios.post(`${API_BASE}${endpoint}`, formData);
+            let authData;
 
             if (mode === 'signup') {
-                setMessage("Registration successful! Please log in.");
-                setMode('login');
+                // 1. Создаем аккаунт
+                await axios.post(`${API_BASE}/auth/signup`, formData);
+
+                // 2. Сразу выполняем авто-вход, чтобы получить JWT-токен
+                const loginResponse = await axios.post(`${API_BASE}/auth/login`, {
+                    email: formData.email,
+                    password: formData.password
+                });
+                authData = loginResponse.data;
             } else {
-                setMessage("Login successful!");
-                localStorage.setItem('accessToken', response.data.token);
-                onLoginSuccess?.(response.data);
+                // Обычный вход
+                const response = await axios.post(`${API_BASE}/auth/login`, {
+                    email: formData.email,
+                    password: formData.password
+                });
+                authData = response.data;
             }
-            console.log(response.data);
+
+            // Сохраняем токен авторизации
+            localStorage.setItem('accessToken', authData.token);
+
+            // Сообщаем App.jsx об успешном входе (isAuthenticated станет true)
+            onLoginSuccess?.(authData);
+
+            // Перенаправляем на страницу бронирования
+            navigate(TARGET_PAGE);
         } catch (error) {
             const errorMsg = error.response?.data?.message || "Oops! An error occurred";
             setMessage(errorMsg);

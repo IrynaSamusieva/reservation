@@ -12,7 +12,6 @@ import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<ReservationEntity, Long> {
 
-
     @Transactional
     @Modifying
     @Query("update ReservationEntity r set r.status =:status where r.id = :id")
@@ -31,6 +30,7 @@ AND r.roomId = :roomId
                                              @Param("startDate") LocalDate startDate,
                                              @Param("endDate") LocalDate endDate,
                                              @Param("status") ReservationStatus status);
+
     @Query("""
     select r from ReservationEntity r where 
     (:roomId IS NULL OR r.roomId = :roomId)
@@ -42,6 +42,11 @@ AND r.roomId = :roomId
             Pageable pageable
     );
 
+    @Query("""
+    select r from ReservationEntity r where 
+    r.roomId = :roomId
+    AND r.status IN (iryna.samusieva.reservation_system.reservations.ReservationStatus.PENDING, iryna.samusieva.reservation_system.reservations.ReservationStatus.APPROVED)
+    order by r.startDate asc
+""")
+    List<ReservationEntity> findActiveReservationsByRoomId(@Param("roomId") Long roomId);
 }
-
-
