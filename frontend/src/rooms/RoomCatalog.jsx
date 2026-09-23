@@ -20,7 +20,7 @@ const fallbackRooms = [
         description: 'A spacious room with a dedicated lounge area, courtyard view, and modern amenities.',
         capacity: 3,
         pricePerNight: 119.00,
-        imageUrl: 'https://pub-b80ae22be51d442f91a5edc3c685d0af.r2.dev/images(3).jpeg'
+        imageUrl: 'https://pub-b80ae22be51d442f91a5edc3c685d0af.r2.dev/images%20(3).jpeg'
     },
     {
         id: 3,
@@ -29,7 +29,7 @@ const fallbackRooms = [
         description: 'An elegant suite with a separate living room, panoramic windows, and thoughtful luxury details.',
         capacity: 4,
         pricePerNight: 169.00,
-        imageUrl: 'https://pub-b80ae22be51d442f91a5edc3c685d0af.r2.dev/images(6).jpeg'
+        imageUrl: 'https://pub-b80ae22be51d442f91a5edc3c685d0af.r2.dev/images%20(6).jpeg'
     }
 ];
 
