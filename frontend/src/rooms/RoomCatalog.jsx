@@ -2,36 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styles from './RoomCatalog.module.css';
+import {getRoleFromToken} from "../App.jsx";
 
-const fallbackRooms = [
-    {
-        id: 1,
-        roomNumber: '101',
-        name: 'Classic Room',
-        description: 'A bright room with a double bed, comfortable seating, and breakfast included.',
-        capacity: 2,
-        pricePerNight: 89.00,
-        imageUrl: 'https://pub-b80ae22be51d442f91a5edc3c685d0af.r2.dev/images.jpeg'
-    },
-    {
-        id: 2,
-        roomNumber: '201',
-        name: 'Comfort Room',
-        description: 'A spacious room with a dedicated lounge area, courtyard view, and modern amenities.',
-        capacity: 3,
-        pricePerNight: 119.00,
-        imageUrl: 'https://pub-b80ae22be51d442f91a5edc3c685d0af.r2.dev/images%20(3).jpeg'
-    },
-    {
-        id: 3,
-        roomNumber: '301',
-        name: 'Suite with Living Room',
-        description: 'An elegant suite with a separate living room, panoramic windows, and thoughtful luxury details.',
-        capacity: 4,
-        pricePerNight: 169.00,
-        imageUrl: 'https://pub-b80ae22be51d442f91a5edc3c685d0af.r2.dev/images%20(6).jpeg'
-    }
-];
 
 function RoomCard({ room, onSelectRoom }) {
     const [imageError, setImageError] = useState(false);
@@ -86,6 +58,7 @@ function RoomCatalog() {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [role, setRole] = useState(() => getRoleFromToken());
 
     useEffect(() => {
         const fetchRooms = async () => {
@@ -124,6 +97,9 @@ function RoomCatalog() {
             <header className={styles.header}>
                 <a className={styles.brand} href="/reservation" aria-label="Quiet Shore home">Quiet Shore</a>
                 <nav className={styles.nav} aria-label="Main navigation">
+                    {role === 'ADMIN' && (
+                        <a href="/reservation/admin">Admin Panel</a>
+                    )}
                     <a className={styles.activeLink} href="/reservation">Rooms</a>
                     <a href="/my-reservation">My reservations</a>
                 </nav>

@@ -2,8 +2,10 @@ package iryna.samusieva.reservation_system.rooms;
 
 import iryna.samusieva.reservation_system.reservations.ReservationEntity;
 import iryna.samusieva.reservation_system.reservations.ReservationRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -31,6 +33,16 @@ public class RoomController {
         return ResponseEntity.ok(rooms);
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<RoomResponse>> getAllRooms() {
+        List<RoomResponse> rooms = roomRepository.findAll()
+                .stream()
+                .map(RoomResponse::fromEntity)
+                .toList();
+        return ResponseEntity.ok(rooms);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<RoomResponse> getRoomById(@PathVariable("id") Long id) {
         RoomEntity room = roomRepository.findById(id)
@@ -50,5 +62,46 @@ public class RoomController {
                 .toList();
 
         return ResponseEntity.ok(bookedDates);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RoomResponse> createRoom(@RequestBody @Valid RoomRequest request) {
+        RoomEntity room = new RoomEntity();
+        room.setRoomNumber(request.roomNumber());
+        room.setName(request.name());
+        room.setDescription(request.description());
+        room.setCapacity(request.capacity());
+        room.setPricePerNight(request.pricePerNight());
+        room.setImageUrl(request.imageUrl());
+        room.setActive(true);
+        RoomEntity saved = roomRepository.save(room);
+        return ResponseEntity.status(HttpStatus.CREATED).body(RoomResponse.fromEntity(saved));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RoomResponse> updateRoom(@PathVariable("id") Long id,
+                                                   @RequestBody @Valid RoomRequest request) {
+        RoomEntity room = roomRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found with id: " + id));
+        room.setRoomNumber(request.roomNumber());
+        room.setName(request.name());
+        room.setDescription(request.description());
+        room.setCapacity(request.capacity());
+        room.setPricePerNight(request.pricePerNight());
+        room.setImageUrl(request.imageUrl());
+        RoomEntity saved = roomRepository.save(room);
+        return ResponseEntity.ok(RoomResponse.fromEntity(saved));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteRoom(@PathVariable("id") Long id) {
+        RoomEntity room = roomRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found with id: " + id));
+        room.setActive(false);
+        roomRepository.save(room);
+        return ResponseEntity.noContent().build();
     }
 }

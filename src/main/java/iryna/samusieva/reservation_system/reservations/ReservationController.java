@@ -37,15 +37,30 @@ public class ReservationController {
         }
         return ResponseEntity.ok(reservation);
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<ReservationDetailDto>> GetMyReservations(
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        log.info("getMyReservations for userId={}", user.id());
+        return ResponseEntity.ok(reservationService.getMyReservationDetails(user.id()));
+    }
+
     @GetMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Reservation>> GetAllReservationById(
-            @RequestParam(name = "roomId", required = false)Long roomId,
-            @RequestParam(name = "pageSize", required = false)Integer pageSize,
-            @RequestParam(name = "pageNumber", required = false)Integer pageNumber
-            ) {
+            @RequestParam(name = "roomId", required = false) Long roomId,
+            @RequestParam(name = "pageSize", required = false) Integer pageSize,
+            @RequestParam(name = "pageNumber", required = false) Integer pageNumber
+    ) {
         var filter = new ReservationSearchFilter(null, roomId, pageSize, pageNumber);
         return ResponseEntity.ok(reservationService.searchByFilter(filter));
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ReservationDetailDto>> GetAllReservationsWithDetails() {
+        log.info("getAllReservationsWithDetails");
+        return ResponseEntity.ok(reservationService.getAllReservationDetails());
     }
 
     @PostMapping()
@@ -70,8 +85,8 @@ public class ReservationController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> DeleteReservation(@PathVariable("id") Long id) {
         log.info("ReservationToDelete");
-            reservationService.reseravationToDelete(id);
-            return ResponseEntity.noContent().build();
+        reservationService.reseravationToDelete(id);
+        return ResponseEntity.noContent().build();
 
     }
 

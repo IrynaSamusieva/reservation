@@ -4,19 +4,39 @@ import Login from "./login/Login.jsx";
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import RoomCatalog from "./rooms/RoomCatalog.jsx";
 import RoomDetails from "./rooms/RoomDetails.jsx";
+import AdminPanel from "./admin/AdminPanel.jsx";
 
-function ProtectedRoute({ children, isAuthenticated }) {
+export function getRoleFromToken() {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return null;
+    try {
+        const payloadBase64 = token.split('.')[1];
+        const decodedPayload = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+        const tokenData = JSON.parse(decodedPayload);
+        return tokenData.role || null;
+    } catch (error) {
+        return null;
+    }
+}
+function ProtectedRoute({ children, isAuthenticated, requiredRole, currentRole }) {
     return isAuthenticated ? children : <Navigate to="/" replace />;
+
+    if (requiredRole && currentRole !== requiredRole) {
+        return <Navigate to="/reservation" replace/>;
+    }
+    return children;
 }
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(
         () => Boolean(localStorage.getItem('accessToken'))
     );
+    const [role, setRole] = useState(() => getRoleFromToken());
+
     const handleLoginSuccess = () => {
         setIsAuthenticated(true);
+        setRole(getRoleFromToken());
     };
-
     return (
         <BrowserRouter>
             <Routes>
@@ -36,6 +56,19 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+                <Route
+                    path="/reservation/admin"
+                    element={
+                        <ProtectedRoute
+                            isAuthenticated={isAuthenticated}
+                            requiredRole="ADMIN"
+                            currentRole={role}
+                        >
+                            <AdminPanel />
+                        </ProtectedRoute>
+                    }
+                />
+
                 <Route
                     path="/rooms/:id"
                     element={

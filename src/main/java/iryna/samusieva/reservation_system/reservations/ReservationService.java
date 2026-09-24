@@ -2,6 +2,8 @@ package iryna.samusieva.reservation_system.reservations;
 
 import iryna.samusieva.reservation_system.availability.ReservationavailabilityService;
 import iryna.samusieva.reservation_system.AuthenticatedUser;
+import iryna.samusieva.reservation_system.login.UserRepository;
+import iryna.samusieva.reservation_system.rooms.RoomRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,21 +19,82 @@ public class ReservationService {
    private final Logger log = LoggerFactory.getLogger(ReservationService.class);
    private final ReservationMapper mapper;
    private final ReservationavailabilityService service;
+   private final RoomRepository roomRepository;
+   private final UserRepository userRepository;
 
     public ReservationService(ReservationRepository repository,
                               ReservationMapper mapper,
-                              ReservationavailabilityService service) {
+                              ReservationavailabilityService service,
+                              RoomRepository roomRepository,
+                              UserRepository userRepository) {
         this.repository = repository;
         this.mapper = mapper;
         this.service = service;
+        this.roomRepository = roomRepository;
+        this.userRepository = userRepository;
+    }
+
+    public List<ReservationDetailDto> getMyReservationDetails(Long userId) {
+        var filter = new ReservationSearchFilter(userId, null, null, null);
+        List<ReservationEntity> entities = repository.searchByFilter(userId, null,
+                Pageable.unpaged());
+
+        return entities.stream().map(r -> {
+            String roomName = roomRepository.findById(r.getRoomId())
+                    .map(room -> room.getName())
+                    .orElse("Room #" + r.getRoomId());
+            String roomNumber = roomRepository.findById(r.getRoomId())
+                    .map(room -> room.getRoomNumber())
+                    .orElse(String.valueOf(r.getRoomId()));
+            String userName = userRepository.findById(r.getUserId())
+                    .map(user -> user.getUsername())
+                    .orElse("User #" + r.getUserId());
+            return new ReservationDetailDto(
+                    r.getId(),
+                    r.getUserId(),
+                    userName,
+                    r.getRoomId(),
+                    roomName,
+                    roomNumber,
+                    r.getStartDate(),
+                    r.getEndDate(),
+                    r.getStatus()
+            );
+        }).toList();
+    }
+
+    public List<ReservationDetailDto> getAllReservationDetails() {
+        List<ReservationEntity> entities = repository.searchByFilter(null, null, Pageable.unpaged());
+        return entities.stream().map(r -> {
+            String roomName = roomRepository.findById(r.getRoomId())
+                    .map(room -> room.getName())
+                    .orElse("Room #" + r.getRoomId());
+            String roomNumber = roomRepository.findById(r.getRoomId())
+                    .map(room -> room.getRoomNumber())
+                    .orElse(String.valueOf(r.getRoomId()));
+            String userName = userRepository.findById(r.getUserId())
+                    .map(user -> user.getUsername())
+                    .orElse("User #" + r.getUserId());
+            return new ReservationDetailDto(
+                    r.getId(),
+                    r.getUserId(),
+                    userName,
+                    r.getRoomId(),
+                    roomName,
+                    roomNumber,
+                    r.getStartDate(),
+                    r.getEndDate(),
+                    r.getStatus()
+            );
+        }).toList();
     }
 
     public Reservation reservationToUpdate(Long id, Reservation reservationToUpdate, AuthenticatedUser user) {
-    var resrvationEntity = repository.findById(id).orElseThrow(() ->
-            new NoSuchElementException("Reservation is not found"));
-    if(resrvationEntity.getStatus() != ReservationStatus.PENDING){
-        throw new NoSuchElementException("Reservation is not pending");
-    }
+        var resrvationEntity = repository.findById(id).orElseThrow(() ->
+                new NoSuchElementException("Reservation is not found"));
+        if(resrvationEntity.getStatus() != ReservationStatus.PENDING){
+            throw new NoSuchElementException("Reservation is not pending");
+        }
         if (!user.isAdmin() && !resrvationEntity.getUserId().equals(user.id())) {
             throw new SecurityException("You cannot update another user's reservation");
         }
@@ -63,6 +126,7 @@ public class ReservationService {
                 .orElseThrow(() -> new NoSuchElementException("Reservation not found"));
         return mapper.toDomain(result);
     }
+
     public List<Reservation> searchByFilter(ReservationSearchFilter filter) {
         int pageSize = filter.pageSize() != null ? filter.pageSize() : 10;
         int pageNumber = filter.pageNumber() != null ? filter.pageNumber() : 0;
@@ -80,7 +144,7 @@ public class ReservationService {
         if(!reservation.endDate().isAfter(reservation.startDate())){
             throw new IllegalArgumentException("End date must be after start date");
         }
-           var entityToSave = mapper.toReservationEntity(reservation);
+        var entityToSave = mapper.toReservationEntity(reservation);
         entityToSave.setUserId(authenticatedUserId);
         entityToSave.setStatus(ReservationStatus.PENDING);
 
@@ -102,10 +166,7 @@ public class ReservationService {
         }
 
         resrvationEntity.setStatus(ReservationStatus.APPROVED);
-       var saved = repository.save(resrvationEntity);
+        var saved = repository.save(resrvationEntity);
         return mapper.toDomain(saved);
     }
-
-
-
 }
