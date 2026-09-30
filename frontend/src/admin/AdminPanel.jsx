@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styles from './AdminPanel.module.css';
 
@@ -118,6 +119,7 @@ function ConfirmDialog({ message, onConfirm, onCancel }) {
 /* ─── Main AdminPanel ───────────────────────────────────────── */
 
 function AdminPanel() {
+    const navigate = useNavigate();
     const [tab, setTab] = useState('reservations');
     const [reservations, setReservations] = useState([]);
     const [rooms, setRooms] = useState([]);
@@ -230,16 +232,16 @@ function AdminPanel() {
 
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
-        window.location.assign('/');
+        navigate('/');
     };
 
     return (
         <div className={styles.page}>
             {/* Header */}
             <header className={styles.header}>
-                <a className={styles.brand} href="/reservation">Quiet Shore</a>
+                <Link className={styles.brand} to="/reservation">Quiet Shore</Link>
                 <nav className={styles.nav}>
-                    <a href="/reservation">Rooms</a>
+                    <Link to="/reservation">Rooms</Link>
                     <span className={styles.activeLink}>Admin Panel</span>
                 </nav>
                 <button className={styles.logout} type="button" onClick={handleLogout}>Log out</button>

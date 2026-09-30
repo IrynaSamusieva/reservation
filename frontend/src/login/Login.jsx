@@ -14,7 +14,7 @@ function Login({ onLoginSuccess }) {
         password: ''
     });
 
-    const API_BASE = import.meta.env.VITE_API_BASE;
+    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const statusLabels = {
@@ -53,9 +53,9 @@ function ReservationGetDetail() {
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <a href="/reservation" style={{ color: '#555', textDecoration: 'none', fontSize: '14px' }}>
+                    <Link to="/reservation" style={{ color: '#555', textDecoration: 'none', fontSize: '14px' }}>
                         ← Back to Rooms
-                    </a>
+                    </Link>
                     <button
                         onClick={fetchMyReservations}
                         style={{
@@ -86,7 +86,7 @@ function ReservationGetDetail() {
                     <p style={{ fontSize: '20px', marginBottom: '8px' }}>No reservations yet.</p>
                     <p style={{ margin: 0 }}>
                         Go to{' '}
-                        <a href="/reservation" style={{ color: '#888', fontWeight: 600 }}>Rooms</a>{' '}
+                        <Link to="/reservation" style={{ color: '#888', fontWeight: 600 }}>Rooms</Link>{' '}
                         to make a booking.
                     </p>
                 </div>

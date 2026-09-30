@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import styles from './RoomCatalog.module.css';
 import {getRoleFromToken} from "../App.jsx";
@@ -95,13 +95,13 @@ function RoomCatalog() {
     return (
         <main className={styles.page}>
             <header className={styles.header}>
-                <a className={styles.brand} href="/reservation" aria-label="Quiet Shore home">Quiet Shore</a>
+                <Link className={styles.brand} to="/reservation" aria-label="Quiet Shore home">Quiet Shore</Link>
                 <nav className={styles.nav} aria-label="Main navigation">
                     {role === 'ADMIN' && (
-                        <a href="/reservation/admin">Admin Panel</a>
+                        <Link to="/reservation/admin">Admin Panel</Link>
                     )}
-                    <a className={styles.activeLink} href="/reservation">Rooms</a>
-                    <a href="/my-reservation">My reservations</a>
+                    <Link className={styles.activeLink} to="/reservation">Rooms</Link>
+                    <Link to="/my-reservation">My reservations</Link>
                 </nav>
                 <button className={styles.logout} type="button" onClick={handleLogout}>Log out</button>
             </header>

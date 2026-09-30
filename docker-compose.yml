@@ -1,17 +1,22 @@
 services:
-  postgres:
-    image: postgres
-    #platform: linux/x86_64
-    container_name: postgres
-    environment:
-      POSTGRES_ROOT_PASSWORD: postgres
-      POSTGRES_DB: reservations
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-    ports:
-       - "5432:5432"
-    volumes:
-      - ./db_backup.sql:/docker-entrypoint-initdb.d/init.sql
+#  postgres:
+#    image: postgres
+#    #platform: linux/x86_64
+#    container_name: postgres
+#    environment:
+#      POSTGRES_PASSWORD: root
+#      POSTGRES_DB: postgres
+#      POSTGRES_USER: postgres
+#    ports:
+#       - "5432:5432"
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+#      interval: 3s
+#      timeout: 3s
+#      retries: 5
+#    volumes:
+#      - ./db_backup.sql:/docker-entrypoint-initdb.d/init.sql
+
 
 
   tomcat:
@@ -19,16 +24,19 @@ services:
       - secret.env
     build: .
     container_name: tomcat
-    depends_on:
-      - postgres
+#    depends_on:
+#        postgres:
+#          condition: service_healthy
     ports:
       - "8080:8080"
     environment:
-      DB_HOST: postgres
+      DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_NAME: reservations
+      DB_NAME: postgres
       DB_USER: postgres
       DB_PASS: root
       #RABBIT_HOST: rabbitmq
       #MEMCACHED_HOST: memcached
+
+
 

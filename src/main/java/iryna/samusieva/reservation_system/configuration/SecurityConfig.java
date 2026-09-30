@@ -23,6 +23,7 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
@@ -31,12 +32,25 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/assets/**",
+                                "/*.css",
+                                "/*.js",
+                                "/*.svg",
+                                "/*.png",
+                                "/static/assets/**"
+                        ).permitAll()
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/reservation/my").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/reservation", "/reservation/all")
+                        .hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/rooms/all").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/rooms/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 

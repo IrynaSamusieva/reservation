@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import styles from './RoomDetails.module.css';
 
@@ -304,16 +304,16 @@ function RoomDetails() {
                 <button className={styles.backBtn} onClick={() => navigate('/reservation')}>
                     ← Back to Rooms
                 </button>
-                <a className={styles.brand} href="/reservation">Quiet Shore</a>
+                <Link className={styles.brand} to="/reservation">Quiet Shore</Link>
                 <nav className={styles.nav}>
-                    <a href="/reservation">Rooms</a>
-                    <a href="/my-reservation">My reservations</a>
+                    <Link to="/reservation">Rooms</Link>
+                    <Link to="/my-reservation">My reservations</Link>
                 </nav>
                 <button
                     className={styles.logout}
                     onClick={() => {
                         localStorage.removeItem('accessToken');
-                        window.location.assign('/');
+                        navigate('/');
                     }}
                 >
                     Log out
@@ -381,9 +381,9 @@ function RoomDetails() {
                         {bookingSuccess && (
                             <div className={styles.successAlert}>
                                 <div>{bookingSuccess}</div>
-                                <a className={styles.viewReservationsLink} href="/my-reservation">
+                                <Link className={styles.viewReservationsLink} to="/my-reservation">
                                     View in My Reservations →
-                                </a>
+                                </Link>
                             </div>
                         )}
 

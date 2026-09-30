@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ReservationGetDetail from "./controllers/ReservationGetDetail.jsx";
 import Login from "./login/Login.jsx";
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import RoomCatalog from "./rooms/RoomCatalog.jsx";
 import RoomDetails from "./rooms/RoomDetails.jsx";
 import AdminPanel from "./admin/AdminPanel.jsx";
@@ -19,11 +19,8 @@ export function getRoleFromToken() {
     }
 }
 function ProtectedRoute({ children, isAuthenticated, requiredRole, currentRole }) {
-    return isAuthenticated ? children : <Navigate to="/" replace />;
-
-    if (requiredRole && currentRole !== requiredRole) {
-        return <Navigate to="/reservation" replace/>;
-    }
+    if (!isAuthenticated) return <Navigate to="/" replace />;
+    if (requiredRole && currentRole !== requiredRole) return <Navigate to="/reservation" replace />;
     return children;
 }
 
@@ -38,7 +35,7 @@ function App() {
         setRole(getRoleFromToken());
     };
     return (
-        <BrowserRouter>
+        <Router>
             <Routes>
                 <Route
                     path="/"
@@ -87,7 +84,7 @@ function App() {
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-        </BrowserRouter>
+        </Router>
     );
 }
 
