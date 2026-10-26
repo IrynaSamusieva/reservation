@@ -6,7 +6,6 @@ public record UserResponse(
         Long id,
         String username,
         String email,
-        ReservationRole role,
-        String token
+        ReservationRole role
 
 ) {}

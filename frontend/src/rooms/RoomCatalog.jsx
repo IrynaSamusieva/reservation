@@ -63,8 +63,7 @@ function RoomCatalog() {
     useEffect(() => {
         const fetchRooms = async () => {
             try {
-                const token = localStorage.getItem('accessToken');
-                const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+                const config = { withCredentials: true };
                 const res = await axios.get(`${API_BASE}/rooms`, config);
                 if (res.data && res.data.length > 0) {
                     setRooms(res.data);
@@ -84,7 +83,8 @@ function RoomCatalog() {
     }, [API_BASE]);
 
     const handleLogout = () => {
-        localStorage.removeItem('accessToken');
+        axios.post(`${API_BASE}/auth/logout`, {}, { withCredentials: true });
+        sessionStorage.clear();
         window.location.assign('/');
     };
 

@@ -26,10 +26,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorization != null && authorization.startsWith("Bearer ") &&
+        String token = authorization != null && authorization.startsWith("Bearer ")
+                ? authorization.substring(7) : null;
+        if (token == null && request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                if ("access_token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        if (token != null &&
                 SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                AuthenticatedUser user = jwtService.parseToken(authorization.substring(7));
+                AuthenticatedUser user = jwtService.parseToken(token);
                 var authentication = new UsernamePasswordAuthenticationToken(
                         user,
                         null,

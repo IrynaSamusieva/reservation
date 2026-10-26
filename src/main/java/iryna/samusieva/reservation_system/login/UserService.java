@@ -45,9 +45,14 @@ public class UserService {
                 userEntity.getId(),
                 userEntity.getUsername(),
                 userEntity.getEmail(),
-                userEntity.getRole(),
-                jwtService.generateToken(userEntity)
+                userEntity.getRole()
         );
+    }
+
+    public String createLoginToken(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return jwtService.generateToken(user);
     }
 
     public boolean isAdmin(Long userId) {

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import styles from './RoomDetails.module.css';
 
-// Fallback catalog in case backend is offline
+// Demo data is available only when explicitly requested with ?demo=1.
 const fallbackRoomsMap = {
     1: {
         id: 1,
@@ -63,13 +63,13 @@ function RoomDetails() {
     const [bookingError, setBookingError] = useState('');
     const [bookingSuccess, setBookingSuccess] = useState('');
 
-    const token = localStorage.getItem('accessToken');
+    const demoMode = new URLSearchParams(window.location.search).get('demo') === '1';
 
     // Fetch room data and booked dates
     const loadRoomData = async () => {
         setLoading(true);
         try {
-            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            const config = { withCredentials: true };
             
             // 1. Fetch Room Details
             const roomRes = await axios.get(`${API_BASE}/rooms/${id}`, config);
@@ -84,10 +84,9 @@ function RoomDetails() {
                 setBookedRanges([]);
             }
         } catch (err) {
-            console.warn('Error loading room from API, checking fallback:', err);
-            const fallback = fallbackRoomsMap[id] || fallbackRoomsMap[1];
-            setRoom(fallback);
-            setError('Using local room preview mode.');
+            console.warn('Error loading room from API:', err);
+            setRoom(demoMode ? (fallbackRoomsMap[id] || null) : null);
+            setError(demoMode ? 'Demo preview mode: live room data could not be loaded.' : 'Could not load this room. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -100,7 +99,7 @@ function RoomDetails() {
     // Check if a specific date (YYYY-MM-DD) is already booked
     const isDateBooked = (dateStr) => {
         return bookedRanges.some(range => {
-            return dateStr >= range.startDate && dateStr <= range.endDate;
+            return dateStr >= range.startDate && dateStr < range.endDate;
         });
     };
 
@@ -162,7 +161,7 @@ function RoomDetails() {
 
     // Handle day click
     const handleDayClick = (dayObj) => {
-        if (dayObj.isDisabled) return;
+        if (dayObj.isPast || (dayObj.isBooked && (!checkIn || checkOut))) return;
 
         setBookingError('');
         setBookingSuccess('');
@@ -184,7 +183,7 @@ function RoomDetails() {
                 const end = new Date(selected);
                 let hasBookedInRange = false;
 
-                while (curr <= end) {
+                while (curr < end) {
                     const iso = formatDateToISO(curr);
                     if (isDateBooked(iso)) {
                         hasBookedInRange = true;
@@ -223,11 +222,6 @@ function RoomDetails() {
             return;
         }
 
-        if (!token) {
-            setBookingError('You need to be logged in to book a room. Please log in first.');
-            return;
-        }
-
         setBookingLoading(true);
         setBookingError('');
         setBookingSuccess('');
@@ -241,16 +235,14 @@ function RoomDetails() {
             };
 
             await axios.post(`${API_BASE}/reservation`, payload, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                withCredentials: true
             });
 
             setBookingSuccess(`Room ${room.roomNumber} successfully reserved from ${checkIn} to ${checkOut}! Status: PENDING.`);
             
             // Refresh booked dates so new reservation dates are disabled immediately
             const datesRes = await axios.get(`${API_BASE}/rooms/${id}/booked-dates`, {
-                headers: { Authorization: `Bearer ${token}` }
+                withCredentials: true
             });
             setBookedRanges(datesRes.data || []);
 
@@ -289,7 +281,7 @@ function RoomDetails() {
         return (
             <main className={styles.page}>
                 <div className={styles.container}>
-                    <h2>Room not found</h2>
+                    <h2>{error || 'Room not found'}</h2>
                     <button className={styles.backBtn} onClick={() => navigate('/reservation')}>
                         ← Back to Rooms Catalog
                     </button>
@@ -312,7 +304,8 @@ function RoomDetails() {
                 <button
                     className={styles.logout}
                     onClick={() => {
-                        localStorage.removeItem('accessToken');
+                        axios.post(`${API_BASE}/auth/logout`, {}, { withCredentials: true });
+                        sessionStorage.clear();
                         navigate('/');
                     }}
                 >

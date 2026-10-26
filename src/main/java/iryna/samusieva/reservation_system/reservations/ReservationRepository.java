@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -22,8 +24,8 @@ public interface ReservationRepository extends JpaRepository<ReservationEntity, 
 
     @Query("""
 select r.id from ReservationEntity r where r.status = :status 
-AND :startDate <= r.endDate
-AND :endDate >= r.startDate
+AND :startDate < r.endDate
+AND :endDate > r.startDate
 AND r.roomId = :roomId
 """)
     List<Long> findConflictingReservationIds(@Param("roomId") Long roomId,
@@ -49,4 +51,19 @@ AND r.roomId = :roomId
     order by r.startDate asc
 """)
     List<ReservationEntity> findActiveReservationsByRoomId(@Param("roomId") Long roomId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from ReservationEntity r where r.id = :id")
+    java.util.Optional<ReservationEntity> findByIdForUpdate(@Param("id") Long id);
+
+    @Query("""
+        select new iryna.samusieva.reservation_system.reservations.ReservationDetailDto(
+            r.id, r.userId, u.username, r.roomId, room.name, room.roomNumber,
+            r.startDate, r.endDate, r.status)
+        from ReservationEntity r
+        left join iryna.samusieva.reservation_system.login.UserEntity u on u.id = r.userId
+        left join iryna.samusieva.reservation_system.rooms.RoomEntity room on room.id = r.roomId
+        where (:userId is null or r.userId = :userId)
+    """)
+    List<ReservationDetailDto> findDetails(@Param("userId") Long userId);
 }

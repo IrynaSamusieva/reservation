@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -35,58 +36,11 @@ public class ReservationService {
     }
 
     public List<ReservationDetailDto> getMyReservationDetails(Long userId) {
-        var filter = new ReservationSearchFilter(userId, null, null, null);
-        List<ReservationEntity> entities = repository.searchByFilter(userId, null,
-                Pageable.unpaged());
-
-        return entities.stream().map(r -> {
-            String roomName = roomRepository.findById(r.getRoomId())
-                    .map(room -> room.getName())
-                    .orElse("Room #" + r.getRoomId());
-            String roomNumber = roomRepository.findById(r.getRoomId())
-                    .map(room -> room.getRoomNumber())
-                    .orElse(String.valueOf(r.getRoomId()));
-            String userName = userRepository.findById(r.getUserId())
-                    .map(user -> user.getUsername())
-                    .orElse("User #" + r.getUserId());
-            return new ReservationDetailDto(
-                    r.getId(),
-                    r.getUserId(),
-                    userName,
-                    r.getRoomId(),
-                    roomName,
-                    roomNumber,
-                    r.getStartDate(),
-                    r.getEndDate(),
-                    r.getStatus()
-            );
-        }).toList();
+        return repository.findDetails(userId);
     }
 
     public List<ReservationDetailDto> getAllReservationDetails() {
-        List<ReservationEntity> entities = repository.searchByFilter(null, null, Pageable.unpaged());
-        return entities.stream().map(r -> {
-            String roomName = roomRepository.findById(r.getRoomId())
-                    .map(room -> room.getName())
-                    .orElse("Room #" + r.getRoomId());
-            String roomNumber = roomRepository.findById(r.getRoomId())
-                    .map(room -> room.getRoomNumber())
-                    .orElse(String.valueOf(r.getRoomId()));
-            String userName = userRepository.findById(r.getUserId())
-                    .map(user -> user.getUsername())
-                    .orElse("User #" + r.getUserId());
-            return new ReservationDetailDto(
-                    r.getId(),
-                    r.getUserId(),
-                    userName,
-                    r.getRoomId(),
-                    roomName,
-                    roomNumber,
-                    r.getStartDate(),
-                    r.getEndDate(),
-                    r.getStatus()
-            );
-        }).toList();
+        return repository.findDetails(null);
     }
 
     public Reservation reservationToUpdate(Long id, Reservation reservationToUpdate, AuthenticatedUser user) {
@@ -100,6 +54,12 @@ public class ReservationService {
         }
         if(!reservationToUpdate.endDate().isAfter(reservationToUpdate.startDate())){
             throw new IllegalArgumentException("End date must be after start date");
+        }
+        var requestedRoom = roomRepository.findById(reservationToUpdate.roomId())
+                .filter(room -> Boolean.TRUE.equals(room.getActive()))
+                .orElseThrow(() -> new IllegalArgumentException("Room does not exist or is unavailable"));
+        if (!service.isReservationAvailable(requestedRoom.getId(), reservationToUpdate.startDate(), reservationToUpdate.endDate())) {
+            throw new IllegalStateException("Room is not available for the selected dates");
         }
         else{
             var updated = mapper.toReservationEntity(reservationToUpdate);
@@ -152,12 +112,16 @@ public class ReservationService {
         return mapper.toDomain(savedEntity);
     }
 
+    @Transactional
     public Reservation approveReservation(Long id) {
-        var resrvationEntity = repository.findById(id).orElseThrow(() ->
+        var resrvationEntity = repository.findByIdForUpdate(id).orElseThrow(() ->
                 new NoSuchElementException("Reservation is not found"));
         if(resrvationEntity.getStatus() != ReservationStatus.PENDING){
             throw new NoSuchElementException("Reservation is not pending");
         }
+
+        roomRepository.findByIdForUpdate(resrvationEntity.getRoomId()).orElseThrow(() ->
+                new IllegalStateException("Room does not exist or is unavailable"));
 
         if(!service.isReservationAvailable(resrvationEntity.getRoomId(),
                 resrvationEntity.getStartDate(),

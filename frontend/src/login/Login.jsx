@@ -33,25 +33,22 @@ function Login({ onLoginSuccess }) {
 
             if (mode === 'signup') {
                 // 1. Создаем аккаунт
-                await axios.post(`${API_BASE}/auth/signup`, formData);
+                await axios.post(`${API_BASE}/auth/signup`, formData, { withCredentials: true });
 
                 // 2. Сразу выполняем авто-вход, чтобы получить JWT-токен
                 const loginResponse = await axios.post(`${API_BASE}/auth/login`, {
                     email: formData.email,
                     password: formData.password
-                });
+                }, { withCredentials: true });
                 authData = loginResponse.data;
             } else {
                 // Обычный вход
                 const response = await axios.post(`${API_BASE}/auth/login`, {
                     email: formData.email,
                     password: formData.password
-                });
+                }, { withCredentials: true });
                 authData = response.data;
             }
-
-            // Сохраняем токен авторизации
-            localStorage.setItem('accessToken', authData.token);
 
             // Сообщаем App.jsx об успешном входе (isAuthenticated станет true)
             onLoginSuccess?.(authData);

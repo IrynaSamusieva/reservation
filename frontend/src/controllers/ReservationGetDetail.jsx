@@ -25,9 +25,8 @@ function ReservationGetDetail() {
         setLoading(true);
         setError('');
         try {
-            const token = localStorage.getItem('accessToken');
             const response = await axios.get(`${API_BASE}/reservation/my`, {
-                headers: { Authorization: `Bearer ${token}` }
+                withCredentials: true
             });
             setReservations(response.data || []);
         } catch (err) {

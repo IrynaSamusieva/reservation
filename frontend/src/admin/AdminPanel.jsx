@@ -9,8 +9,7 @@ const statusLabels = { PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Reje
 const statusColors = { PENDING: '#b8860b', APPROVED: '#2e7d32', REJECTED: '#c62828' };
 
 function getAuthHeaders() {
-    const token = localStorage.getItem('accessToken');
-    return { Authorization: `Bearer ${token}` };
+    return {};
 }
 
 
@@ -43,9 +42,9 @@ function RoomFormModal({ room, onClose, onSaved }) {
                 pricePerNight: Number(form.pricePerNight),
             };
             if (isEdit) {
-                await axios.put(`${API_BASE}/rooms/${room.id}`, payload, { headers: getAuthHeaders() });
+                await axios.put(`${API_BASE}/rooms/${room.id}`, payload, { withCredentials: true });
             } else {
-                await axios.post(`${API_BASE}/rooms`, payload, { headers: getAuthHeaders() });
+                await axios.post(`${API_BASE}/rooms`, payload, { withCredentials: true });
             }
             onSaved();
         } catch (err) {
@@ -138,7 +137,7 @@ function AdminPanel() {
         setLoadingRes(true);
         setResError('');
         try {
-            const res = await axios.get(`${API_BASE}/reservation/all`, { headers: getAuthHeaders() });
+            const res = await axios.get(`${API_BASE}/reservation/all`, { withCredentials: true });
             setReservations(res.data || []);
         } catch (err) {
             setResError('Failed to load reservations.');
@@ -151,7 +150,7 @@ function AdminPanel() {
         setLoadingRooms(true);
         setRoomsError('');
         try {
-            const res = await axios.get(`${API_BASE}/rooms/all`, { headers: getAuthHeaders() });
+            const res = await axios.get(`${API_BASE}/rooms/all`, { withCredentials: true });
             setRooms(res.data || []);
         } catch (err) {
             setRoomsError('Failed to load rooms.');
@@ -167,7 +166,7 @@ function AdminPanel() {
     const handleApprove = async (id) => {
         setActionLoading(id + '_approve');
         try {
-            await axios.post(`${API_BASE}/reservation/${id}/approve`, {}, { headers: getAuthHeaders() });
+            await axios.post(`${API_BASE}/reservation/${id}/approve`, {}, { withCredentials: true });
             await fetchReservations();
         } catch (err) {
             alert(err.response?.data?.message || 'Failed to approve reservation.');
@@ -183,7 +182,7 @@ function AdminPanel() {
                 setConfirmDialog(null);
                 setActionLoading(id + '_reject');
                 try {
-                    await axios.delete(`${API_BASE}/reservation/${id}/reject`, { headers: getAuthHeaders() });
+                    await axios.delete(`${API_BASE}/reservation/${id}/reject`, { withCredentials: true });
                     await fetchReservations();
                 } catch (err) {
                     alert(err.response?.data?.message || 'Failed to reject reservation.');
@@ -201,7 +200,7 @@ function AdminPanel() {
             onConfirm: async () => {
                 setConfirmDialog(null);
                 try {
-                    await axios.delete(`${API_BASE}/rooms/${room.id}`, { headers: getAuthHeaders() });
+                    await axios.delete(`${API_BASE}/rooms/${room.id}`, { withCredentials: true });
                     await fetchRooms();
                 } catch (err) {
                     alert(err.response?.data?.message || 'Failed to delete room.');
@@ -231,7 +230,8 @@ function AdminPanel() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('accessToken');
+        axios.post(`${API_BASE}/auth/logout`, {}, { withCredentials: true });
+        sessionStorage.clear();
         navigate('/');
     };
 

@@ -7,16 +7,7 @@ import RoomDetails from "./rooms/RoomDetails.jsx";
 import AdminPanel from "./admin/AdminPanel.jsx";
 
 export function getRoleFromToken() {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return null;
-    try {
-        const payloadBase64 = token.split('.')[1];
-        const decodedPayload = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
-        const tokenData = JSON.parse(decodedPayload);
-        return tokenData.role || null;
-    } catch (error) {
-        return null;
-    }
+    return sessionStorage.getItem('userRole');
 }
 function ProtectedRoute({ children, isAuthenticated, requiredRole, currentRole }) {
     if (!isAuthenticated) return <Navigate to="/" replace />;
@@ -25,14 +16,14 @@ function ProtectedRoute({ children, isAuthenticated, requiredRole, currentRole }
 }
 
 function App() {
-    const [isAuthenticated, setIsAuthenticated] = useState(
-        () => Boolean(localStorage.getItem('accessToken'))
-    );
+    const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('authenticated') === 'true');
     const [role, setRole] = useState(() => getRoleFromToken());
 
-    const handleLoginSuccess = () => {
+    const handleLoginSuccess = (authData) => {
+        sessionStorage.setItem('authenticated', 'true');
+        sessionStorage.setItem('userRole', authData?.role || 'USER');
         setIsAuthenticated(true);
-        setRole(getRoleFromToken());
+        setRole(authData?.role || null);
     };
     return (
         <Router>
