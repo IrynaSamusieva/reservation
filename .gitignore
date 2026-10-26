@@ -32,4 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 frontend/.env
+.env
+.env.*
+!.env.example
 /secret.env
